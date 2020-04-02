@@ -3,59 +3,95 @@
 #----------------------------------------------------------------------------#
 
 import json
+import sys
 import dateutil.parser
 import babel
 from flask import Flask, render_template, request, Response, flash, redirect, url_for
 from flask_moment import Moment
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 import logging
 from logging import Formatter, FileHandler
 from flask_wtf import Form
 from forms import *
+from datetime import datetime
+import operator
+
 #----------------------------------------------------------------------------#
 # App Config.
 #----------------------------------------------------------------------------#
 
 app = Flask(__name__)
 moment = Moment(app)
-app.config.from_object('config')
-db = SQLAlchemy(app)
 
 # TODO: connect to a local postgresql database
+app.config.from_object('config')
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
 #----------------------------------------------------------------------------#
 # Models.
 #----------------------------------------------------------------------------#
 
+###########################  SHOWS  ######################
+class Show(db.Model):
+  __tablename__ = 'shows'
+  id = db.Column(db.Integer, primary_key=True)
+  venue_id = db.Column(db.Integer, db.ForeignKey('venues.id'))
+  artist_id = db.Column(db.Integer, db.ForeignKey('artists.id'))
+  artist = db.relationship("Artist", back_populates="venues")
+  venue = db.relationship("Venue", back_populates="artists")
+
+  venue_name = db.Column(db.String, nullable=False)
+  artist_name = db.Column(db.String, nullable=False)
+  artist_image_link = db.Column(db.String(500))
+  start_time = db.Column(db.DATE)
+
+  def __repr__(self):
+      return f'<Show: {self.id}, Venue: ({self.venue_id}, {self.venue_name}), Artist: ({self.artist_id}, {self.artist_name})>'
+
 class Venue(db.Model):
-    __tablename__ = 'Venue'
+    __tablename__ = 'venues'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    city = db.Column(db.String(120))
-    state = db.Column(db.String(120))
-    address = db.Column(db.String(120))
+    name = db.Column(db.String, nullable=False)
+    city = db.Column(db.String(120), nullable=False)
+    state = db.Column(db.String(120), nullable=False)
+    address = db.Column(db.String(120), nullable=False)
     phone = db.Column(db.String(120))
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
 
     # TODO: implement any missing fields, as a database migration using Flask-Migrate
+    genres = db.Column(db.ARRAY(db.String(50)), default=dict)
+    website = db.Column(db.String(200))
+    seeking_talent = db.Column(db.Boolean, nullable=False)
+    seeking_description = db.Column(db.String(500))
+    artists = db.relationship('Show', back_populates="venue")
+
+    def __repr__(self):
+      return f'<Venue: {self.id}, {self.name}, {self.city}>'
+
 
 class Artist(db.Model):
-    __tablename__ = 'Artist'
+    __tablename__ = 'artists'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
+    name = db.Column(db.String, nullable=False)
     city = db.Column(db.String(120))
     state = db.Column(db.String(120))
-    phone = db.Column(db.String(120))
-    genres = db.Column(db.String(120))
+    phone = db.Column(db.String(120), nullable=False)
+    genres = db.Column(db.ARRAY(db.String(50)), default=dict)
     image_link = db.Column(db.String(500))
     facebook_link = db.Column(db.String(120))
+    website = db.Column(db.String(200))
+    seeking_venue = db.Column(db.Boolean, nullable=False)
+    seeking_description = db.Column(db.String(500))
+    venues = db.relationship('Show', back_populates="artist")
 
-    # TODO: implement any missing fields, as a database migration using Flask-Migrate
+    def __repr__(self):
+      return f'<Artist: {self.id}, {self.name}>'
 
-# TODO Implement Show and Artist models, and complete all model relationships and properties, as a database migration.
 
 #----------------------------------------------------------------------------#
 # Filters.
@@ -70,6 +106,44 @@ def format_datetime(value, format='medium'):
   return babel.dates.format_datetime(date, format)
 
 app.jinja_env.filters['datetime'] = format_datetime
+
+def show_count_per_venue(venue_id, upcoming=True):
+  try:
+    if upcoming:
+      comp = operator.ge
+    else:
+      comp = operator.lt
+    return  db.session.query(db.func.count(Show.start_time))\
+                .filter(Venue.id == venue_id, Venue.id == Show.venue_id, comp(Show.start_time, datetime.now()))\
+                .first()[0]
+  except:
+    print(sys.exc_info())
+
+def show_list_per_venue(venue_id, upcoming=True):
+  try:
+    if upcoming:
+      comp = operator.ge
+    else:
+      comp = operator.lt
+    # format_datetime(db.func.to_char(Show.start_time, '%Y-%m-%d %H:%M').label("start_time"
+    # 
+    shows = db.session.query(Show.artist_id, Show.artist_name, Show.artist_image_link, \
+                    db.func.cast(Show.start_time, db.String).label("start_time"))\
+                    .filter(Venue.id == venue_id, Venue.id == Show.venue_id, comp(Show.start_time, datetime.now()))\
+                    .all()
+    
+    shows = [s._asdict() for s in shows]
+    
+    # shows = [s["start_time"].strftime("%Y-%m-%dT%H:%M:%S.000Z") if s["start_time"] else s for s in shows]
+    # for s in shows:
+    #   if s["start_time"]:
+    #     s["start_time"] = str(s["start_time"])
+    return shows
+
+  except:
+    print(sys.exc_info())
+
+
 
 #----------------------------------------------------------------------------#
 # Controllers.
@@ -87,28 +161,25 @@ def index():
 def venues():
   # TODO: replace with real venues data.
   #       num_shows should be aggregated based on number of upcoming shows per venue.
-  data=[{
-    "city": "San Francisco",
-    "state": "CA",
-    "venues": [{
-      "id": 1,
-      "name": "The Musical Hop",
-      "num_upcoming_shows": 0,
-    }, {
-      "id": 3,
-      "name": "Park Square Live Music & Coffee",
-      "num_upcoming_shows": 1,
-    }]
-  }, {
-    "city": "New York",
-    "state": "NY",
-    "venues": [{
-      "id": 2,
-      "name": "The Dueling Pianos Bar",
-      "num_upcoming_shows": 0,
-    }]
-  }]
-  return render_template('pages/venues.html', areas=data);
+  # venues_in_city = db.session.query(Venue.id, Venue.name, db.func.sum(db.func.cast(Show.start_time > datetime.now(), db.Integer)).label("num_upcoming_shows"))\
+  #                     .filter(Venue.city == d["city"], Venue.id == Show.venue_id)\
+  #                     .group_by(Venue.id, Venue.name)\
+  #                     .all()
+  # d = [x['venues']db.session.query(Venue.id, Venue.name).filter(Venue.city == 'San Francisco').all() for x in d]
+  # v = db.session.query(Venue.id, Venue.name).filter(Venue.city == 'San Francisco').all()
+  try: 
+    data = db.session.query(Venue.city, Venue.state).distinct().all()
+    data = [{**d._asdict(), 'venues': []} for d in data]
+    for city in data:
+      venues_in_city = db.session.query(Venue.id, Venue.name).filter(Venue.city == city["city"]).all()
+      venues_in_city = [{**v._asdict(), 'num_upcoming_shows': show_count_per_venue(v.id)} for v in venues_in_city]
+      city["venues"] = venues_in_city
+      
+    print("data {}".format(data))
+  except:
+    print(sys.exc_info())
+  finally:
+    return render_template('pages/venues.html', areas=data)
 
 @app.route('/venues/search', methods=['POST'])
 def search_venues():
@@ -129,85 +200,28 @@ def search_venues():
 def show_venue(venue_id):
   # shows the venue page with the given venue_id
   # TODO: replace with real venue data from the venues table, using venue_id
-  data1={
-    "id": 1,
-    "name": "The Musical Hop",
-    "genres": ["Jazz", "Reggae", "Swing", "Classical", "Folk"],
-    "address": "1015 Folsom Street",
-    "city": "San Francisco",
-    "state": "CA",
-    "phone": "123-123-1234",
-    "website": "https://www.themusicalhop.com",
-    "facebook_link": "https://www.facebook.com/TheMusicalHop",
-    "seeking_talent": True,
-    "seeking_description": "We are on the lookout for a local artist to play every two weeks. Please call us.",
-    "image_link": "https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60",
-    "past_shows": [{
-      "artist_id": 4,
-      "artist_name": "Guns N Petals",
-      "artist_image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80",
-      "start_time": "2019-05-21T21:30:00.000Z"
-    }],
-    "upcoming_shows": [],
-    "past_shows_count": 1,
-    "upcoming_shows_count": 0,
-  }
-  data2={
-    "id": 2,
-    "name": "The Dueling Pianos Bar",
-    "genres": ["Classical", "R&B", "Hip-Hop"],
-    "address": "335 Delancey Street",
-    "city": "New York",
-    "state": "NY",
-    "phone": "914-003-1132",
-    "website": "https://www.theduelingpianos.com",
-    "facebook_link": "https://www.facebook.com/theduelingpianos",
-    "seeking_talent": False,
-    "image_link": "https://images.unsplash.com/photo-1497032205916-ac775f0649ae?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=750&q=80",
-    "past_shows": [],
-    "upcoming_shows": [],
-    "past_shows_count": 0,
-    "upcoming_shows_count": 0,
-  }
-  data3={
-    "id": 3,
-    "name": "Park Square Live Music & Coffee",
-    "genres": ["Rock n Roll", "Jazz", "Classical", "Folk"],
-    "address": "34 Whiskey Moore Ave",
-    "city": "San Francisco",
-    "state": "CA",
-    "phone": "415-000-1234",
-    "website": "https://www.parksquarelivemusicandcoffee.com",
-    "facebook_link": "https://www.facebook.com/ParkSquareLiveMusicAndCoffee",
-    "seeking_talent": False,
-    "image_link": "https://images.unsplash.com/photo-1485686531765-ba63b07845a7?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=747&q=80",
-    "past_shows": [{
-      "artist_id": 5,
-      "artist_name": "Matt Quevedo",
-      "artist_image_link": "https://images.unsplash.com/photo-1495223153807-b916f75de8c5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=334&q=80",
-      "start_time": "2019-06-15T23:00:00.000Z"
-    }],
-    "upcoming_shows": [{
-      "artist_id": 6,
-      "artist_name": "The Wild Sax Band",
-      "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-      "start_time": "2035-04-01T20:00:00.000Z"
-    }, {
-      "artist_id": 6,
-      "artist_name": "The Wild Sax Band",
-      "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-      "start_time": "2035-04-08T20:00:00.000Z"
-    }, {
-      "artist_id": 6,
-      "artist_name": "The Wild Sax Band",
-      "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
-      "start_time": "2035-04-15T20:00:00.000Z"
-    }],
-    "past_shows_count": 1,
-    "upcoming_shows_count": 1,
-  }
-  data = list(filter(lambda d: d['id'] == venue_id, [data1, data2, data3]))[0]
-  return render_template('pages/show_venue.html', venue=data)
+  try: 
+    # data = db.session.query(Venue).filter(Venue.id==venue_id).first().__dict__
+    data = Venue.query.get(venue_id).__dict__
+    del data["_sa_instance_state"]
+    # data["start_time"] = format_datetime(data["start_time"])
+
+    data["upcoming_shows_count"] = show_count_per_venue(venue_id, upcoming=True)
+    data["past_shows_count"] = show_count_per_venue(venue_id, upcoming=False)
+    
+    data["upcoming_shows"] = []
+    if data["upcoming_shows_count"]:
+      data["upcoming_shows"] = show_list_per_venue(venue_id, upcoming=True)
+    
+    data["past_shows"] = []
+    if data["past_shows_count"]:
+      data["past_shows"] = show_list_per_venue(venue_id, upcoming=False)
+
+    print(data)
+  except:
+    print(sys.exc_info())
+  finally:
+    return render_template('pages/show_venue.html', venue=data)
 
 #  Create Venue
 #  ----------------------------------------------------------------
