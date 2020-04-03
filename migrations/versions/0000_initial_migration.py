@@ -28,7 +28,7 @@ def upgrade():
     sa.Column('image_link', sa.String(length=500), nullable=True),
     sa.Column('facebook_link', sa.String(length=120), nullable=True),
     sa.Column('website', sa.String(length=200), nullable=True),
-    sa.Column('seeking_venue', sa.Boolean(), nullable=False),
+    sa.Column('seeking_venue', sa.Boolean(), nullable=True),
     sa.Column('seeking_description', sa.String(length=500), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
@@ -43,7 +43,7 @@ def upgrade():
     sa.Column('facebook_link', sa.String(length=120), nullable=True),
     sa.Column('genres', sa.ARRAY(sa.String(length=50)), nullable=True),
     sa.Column('website', sa.String(length=200), nullable=True),
-    sa.Column('seeking_talent', sa.Boolean(), nullable=False),
+    sa.Column('seeking_talent', sa.Boolean(), nullable=True),
     sa.Column('seeking_description', sa.String(length=500), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )

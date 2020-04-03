@@ -1,5 +1,4 @@
 seed_venues = [{
-    "id": 1,
     "name": "The Musical Hop",
     "genres": ["Jazz", "Reggae", "Swing", "Classical", "Folk"],
     "address": "1015 Folsom Street",
@@ -13,7 +12,6 @@ seed_venues = [{
     "image_link": "https://images.unsplash.com/photo-1543900694-133f37abaaa5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=400&q=60",
   },
   {
-    "id": 2,
     "name": "The Dueling Pianos Bar",
     "genres": ["Classical", "R&B", "Hip-Hop"],
     "address": "335 Delancey Street",
@@ -27,7 +25,6 @@ seed_venues = [{
     "image_link": "https://images.unsplash.com/photo-1497032205916-ac775f0649ae?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=750&q=80",
   },
   {
-    "id": 3,
     "name": "Park Square Live Music & Coffee",
     "genres": ["Rock n Roll", "Jazz", "Classical", "Folk"],
     "address": "34 Whiskey Moore Ave",
@@ -42,7 +39,6 @@ seed_venues = [{
   }]
 
 seed_artists = [{
-    "id": 4,
     "name": "Guns N Petals",
     "genres": ["Rock n Roll"],
     "city": "San Francisco",
@@ -55,7 +51,6 @@ seed_artists = [{
     "image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80",
   },
   {
-    "id": 5,
     "name": "Matt Quevedo",
     "genres": ["Jazz"],
     "city": "New York",
@@ -68,7 +63,6 @@ seed_artists = [{
     "image_link": "https://images.unsplash.com/photo-1495223153807-b916f75de8c5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=334&q=80",
   },
   {
-    "id": 6,
     "name": "The Wild Sax Band",
     "genres": ["Jazz", "Classical"],
     "city": "San Francisco",
@@ -84,35 +78,35 @@ seed_artists = [{
 seed_shows = [{
     "venue_id": 1,
     "venue_name": "The Musical Hop",
-    "artist_id": 4,
+    "artist_id": 1,
     "artist_name": "Guns N Petals",
     "artist_image_link": "https://images.unsplash.com/photo-1549213783-8284d0336c4f?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=300&q=80",
     "start_time": "2019-05-21T21:30:00.000Z"
   }, {
     "venue_id": 3,
     "venue_name": "Park Square Live Music & Coffee",
-    "artist_id": 5,
+    "artist_id": 2,
     "artist_name": "Matt Quevedo",
     "artist_image_link": "https://images.unsplash.com/photo-1495223153807-b916f75de8c5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=334&q=80",
     "start_time": "2019-06-15T23:00:00.000Z"
   }, {
     "venue_id": 3,
     "venue_name": "Park Square Live Music & Coffee",
-    "artist_id": 6,
+    "artist_id": 3,
     "artist_name": "The Wild Sax Band",
     "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
     "start_time": "2035-04-01T20:00:00.000Z"
   }, {
     "venue_id": 3,
     "venue_name": "Park Square Live Music & Coffee",
-    "artist_id": 6,
+    "artist_id": 3,
     "artist_name": "The Wild Sax Band",
     "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
     "start_time": "2035-04-08T20:00:00.000Z"
   }, {
     "venue_id": 3,
     "venue_name": "Park Square Live Music & Coffee",
-    "artist_id": 6,
+    "artist_id": 3,
     "artist_name": "The Wild Sax Band",
     "artist_image_link": "https://images.unsplash.com/photo-1558369981-f9ca78462e61?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=794&q=80",
     "start_time": "2035-04-15T20:00:00.000Z"

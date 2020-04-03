@@ -1,8 +1,8 @@
 """assoc obj
 
-Revision ID: bca976705c5f
+Revision ID: e1bc4543a2a8
 Revises: 1111
-Create Date: 2020-04-01 10:57:48.429609
+Create Date: 2020-04-02 12:27:48.015153
 
 """
 from alembic import op
@@ -25,7 +25,7 @@ def upgrade():
     sa.Column('venue_name', sa.String(), nullable=False),
     sa.Column('artist_name', sa.String(), nullable=False),
     sa.Column('artist_image_link', sa.String(length=500), nullable=True),
-    sa.Column('start_time', sa.DATE(), nullable=True),
+    sa.Column('start_time', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['artist_id'], ['artists.id'], ),
     sa.ForeignKeyConstraint(['venue_id'], ['venues.id'], ),
     sa.PrimaryKeyConstraint('id')
