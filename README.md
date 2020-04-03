@@ -1,4 +1,4 @@
-## Welcome to Decentralized Hackathons!
+## Flask & SQLAlchemy Marketplace Backend
 ---
 A Flask & SQLAlchemy backend for a performing artists & venues marketplace.
 + Developed the API with Flask
